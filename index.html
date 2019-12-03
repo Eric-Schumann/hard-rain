@@ -60,16 +60,19 @@
     function preload() {
       this.load.image(
         "player",
-        "http://labs.phaser.io/assets/sprites/clown.png"
+        "./assets/clown.png"
       );
-      this.load.image("rain", "http://labs.phaser.io/assets/sprites/rain.png");
+      this.load.image("rain", "./assets/rain.png");
       this.load.image(
         "platform",
-        "http://labs.phaser.io/assets/sprites/platform.png"
+        "./assets/platform.png"
       );
+      this.load.image("space", "./assets/space.png");
     }
 
     function create() {
+      this.add.image(0,0, "space");
+      
       //Create player
       state.player = this.physics.add.sprite(200, 510, "player").setScale(1.5);
       state.cursors = this.input.keyboard.createCursorKeys();
