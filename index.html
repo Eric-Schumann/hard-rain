@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.19.0/phaser.min.js"
+      integrity="sha256-kF1kZP3VeVryJL2hSRtuAu34Fva0NKx/7IfxsD+Hl2Q="
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      body,
+      html {
+        height: 100vh;
+      }
+
+      h1 {
+        margin: 0 auto;
+        width: 50%;
+        text-align: center;
+      }
+
+      #game {
+        width: 400px;
+        margin: 0 auto;
+      }
+    </style>
+    <title>Hard Rain</title>
+  </head>
+  <body>
+    <h1>Hard Rain</h1>
+    <div id="game"></div>
+  </body>
+  <script>
+    const config = {
+      parent: "game",
+      type: Phaser.AUTO,
+      width: 400,
+      height: 600,
+      physics: {
+        default: "arcade",
+        arcade: {
+          gravity: { y: 300 }
+        }
+      },
+      scene: {
+        preload,
+        create,
+        update
+      }
+    };
+
+    const game = new Phaser.Game(config);
+
+    const state = {
+      score: 0
+    };
+
+    function preload() {
+      this.load.image(
+        "player",
+        "http://labs.phaser.io/assets/sprites/clown.png"
+      );
+      this.load.image("rain", "http://labs.phaser.io/assets/sprites/rain.png");
+      this.load.image(
+        "platform",
+        "http://labs.phaser.io/assets/sprites/platform.png"
+      );
+    }
+
+    function create() {
+      //Create player
+      state.player = this.physics.add.sprite(200, 510, "player").setScale(1.5);
+      state.cursors = this.input.keyboard.createCursorKeys();
+
+      //Create physics groups
+      const rain = this.physics.add.group();
+      const platforms = this.physics.add.staticGroup();
+
+      platforms.create(150, 575, "platform");
+
+      state.scoreText = this.add.text(150, 560, "Score: 0", {
+        fontSize: "20px",
+        fill: "#FFFFFF"
+      });
+
+      this.physics.add.collider(state.player, platforms);
+
+      function createDrop() {
+        const xCoord = Math.random() * 400;
+        rain.create(xCoord, 0, "rain");
+      }
+
+      const rainDropLoop = this.time.addEvent({
+        delay: 150,
+        callback: createDrop,
+        callbackScope: this,
+        loop: true
+      });
+
+      this.physics.add.collider(rain, state.player, () => {
+        rainDropLoop.destroy();
+        this.physics.pause();
+        state.score = 0;
+        this.add.text(135, 300, "Game Over", {
+          fontSize: "20px",
+          fill: "#FFFFFF"
+        });
+        this.add.text(100, 350, "Click To Restart", {
+          fontSize: "20px",
+          fill: "#FFFFFF"
+        });
+        this.input.on("pointerup", () => {
+          this.scene.restart();
+        });
+      });
+
+      this.physics.add.collider(rain, platforms, rain => {
+        rain.destroy();
+        state.score += 10;
+        state.scoreText.setText(`Score: ${state.score}`);
+      });
+    }
+
+    function update() {
+      if (state.cursors.left.isDown) {
+        state.player.setVelocityX(-160);
+      } else if (state.cursors.right.isDown) {
+        state.player.setVelocityX(160);
+      } else {
+        state.player.setVelocityX(0);
+      }
+    }
+  </script>
+</html>
