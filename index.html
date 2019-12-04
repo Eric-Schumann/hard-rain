@@ -14,13 +14,11 @@
       html {
         height: 100vh;
       }
-
       h1 {
         margin: 0 auto;
         width: 50%;
         text-align: center;
       }
-
       #game {
         width: 400px;
         margin: 0 auto;
@@ -50,13 +48,11 @@
         update
       }
     };
-
     const game = new Phaser.Game(config);
-
     const state = {
-      score: 0
+      score: 0,
+      highScore: 0
     };
-
     function preload() {
       this.load.image(
         "player",
@@ -68,44 +64,48 @@
         "./assets/platform.png"
       );
       this.load.image("space", "./assets/space.jpg");
+      this.load.audio("music", ["./assets/happy.mp3"]);
+      this.load.audio("splash", ["./assets/splash1.wav"]);
     }
-
     function create() {
       this.add.image(0,0, "space");
+      const music = this.sound.add("music");
+      music.play();
+
+      const splash = this.sound.add("splash");
       
       //Create player
       state.player = this.physics.add.sprite(200, 510, "player").setScale(1.5);
       state.cursors = this.input.keyboard.createCursorKeys();
-
       //Create physics groups
       const rain = this.physics.add.group();
       const platforms = this.physics.add.staticGroup();
-
       platforms.create(150, 575, "platform");
-
       state.scoreText = this.add.text(150, 560, "Score: 0", {
         fontSize: "20px",
         fill: "#FFFFFF"
       });
-
       this.physics.add.collider(state.player, platforms);
-
       function createDrop() {
         const xCoord = Math.random() * 400;
         rain.create(xCoord, 0, "rain");
       }
-
       const rainDropLoop = this.time.addEvent({
         delay: 150,
         callback: createDrop,
         callbackScope: this,
         loop: true
       });
-
       this.physics.add.collider(rain, state.player, () => {
         rainDropLoop.destroy();
+        music.stop();
+        splash.play();
         this.physics.pause();
+        if(state.highScore < state.score) {
+          state.highScore = state.score;
+        }
         state.score = 0;
+        this.add.text(130, 100, `High Score: ${state.highScore}`);
         this.add.text(135, 300, "Game Over", {
           fontSize: "20px",
           fill: "#FFFFFF"
@@ -118,14 +118,12 @@
           this.scene.restart();
         });
       });
-
       this.physics.add.collider(rain, platforms, rain => {
         rain.destroy();
         state.score += 10;
         state.scoreText.setText(`Score: ${state.score}`);
       });
     }
-
     function update() {
       if (state.cursors.left.isDown) {
         state.player.setVelocityX(-160);
